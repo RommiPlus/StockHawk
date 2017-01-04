@@ -61,7 +61,7 @@ public final class QuoteSyncJob {
                 return;
             }
 
-            Map<String, Stock> quotes = YahooFinance.get(stockArray);
+            Map<String, Stock> quotes = YahooFinance.get(stockArray, true);
             Iterator<String> iterator = stockCopy.iterator();
 
             Timber.d(quotes.toString());
