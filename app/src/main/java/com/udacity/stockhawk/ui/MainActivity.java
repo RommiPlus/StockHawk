@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private StockAdapter adapter;
 
     public static final String STOCK_NAME = "stock_name";
+
     @Override
     public void onClick(String symbol) {
         Timber.d("Symbol clicked: %s", symbol);
@@ -145,6 +146,16 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         swipeRefreshLayout.setRefreshing(false);
+
+        if (data == null || data.getCount() == 0) {
+            if (networkUp()) {
+                error.setText(getString(R.string.error_no_stocks));
+            } else {
+                error.setText(getString(R.string.error_no_network));
+            }
+            error.setVisibility(View.VISIBLE);
+            return;
+        }
 
         if (data.getCount() != 0) {
             error.setVisibility(View.GONE);
