@@ -37,10 +37,39 @@ public final class PrefUtils {
 
     }
 
-    private static void editStockPref(Context context, String symbol, Boolean add) {
+    public static Set<String> getTestStocks(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String stocksKey = context.getString(R.string.pref_test_stocks_key);
+
+        return prefs.getStringSet(stocksKey, new HashSet<String>());
+
+    }
+
+    public static void addStock(Context context, String symbol) {
         String key = context.getString(R.string.pref_stocks_key);
         Set<String> stocks = getStocks(context);
+        editStockPref(context, key, stocks, symbol, true);
+    }
 
+    public static void removeStock(Context context, String symbol) {
+        String key = context.getString(R.string.pref_stocks_key);
+        Set<String> stocks = getStocks(context);
+        editStockPref(context, key, stocks, symbol, false);
+    }
+
+    public static void addTestStock(Context context, String symbol) {
+        String key = context.getString(R.string.pref_test_stocks_key);
+        Set<String> stocks = getTestStocks(context);
+        editStockPref(context, key, stocks, symbol, true);
+    }
+
+    public static void removeTestStock(Context context, String symbol) {
+        String key = context.getString(R.string.pref_test_stocks_key);
+        Set<String> stocks = getTestStocks(context);
+        editStockPref(context, key, stocks, symbol, false);
+    }
+
+    private static void editStockPref(Context context, String key, Set<String> stocks,  String symbol, Boolean add) {
         if (add) {
             stocks.add(symbol);
         } else {
@@ -50,15 +79,7 @@ public final class PrefUtils {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putStringSet(key, stocks);
-        editor.apply();
-    }
-
-    public static void addStock(Context context, String symbol) {
-        editStockPref(context, symbol, true);
-    }
-
-    public static void removeStock(Context context, String symbol) {
-        editStockPref(context, symbol, false);
+        editor.commit();
     }
 
     public static String getDisplayMode(Context context) {

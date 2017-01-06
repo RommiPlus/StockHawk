@@ -12,6 +12,7 @@ import android.net.NetworkInfo;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,6 +33,7 @@ public final class QuoteSyncJob {
 
     private static final int ONE_OFF_ID = 2;
     public static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
+    public static final String ACTION_STOCK_NOT_EXIST = "action_stock_notexist";
     private static final int PERIOD = 300000;
     private static final int INITIAL_BACKOFF = 10000;
     private static final int PERIODIC_ID = 1;
@@ -40,7 +42,7 @@ public final class QuoteSyncJob {
     private QuoteSyncJob() {
     }
 
-    static void getQuotes(Context context) {
+    static synchronized void getQuotes(final Context context) {
 
         Timber.d("Running sync job");
 
@@ -62,12 +64,17 @@ public final class QuoteSyncJob {
             }
 
             Map<String, Stock> quotes = YahooFinance.get(stockArray, true);
-            Iterator<String> iterator = stockCopy.iterator();
 
+            // add test stock info to stock info
+            Set<String> testStockPref = PrefUtils.getTestStocks(context);
+            for (String data: testStockPref) {
+                PrefUtils.removeTestStock(context, data);
+            }
+
+            Iterator<String> iterator = stockCopy.iterator();
             Timber.d(quotes.toString());
 
             ArrayList<ContentValues> quoteCVs = new ArrayList<>();
-
             while (iterator.hasNext()) {
                 String symbol = iterator.next();
 
@@ -114,6 +121,17 @@ public final class QuoteSyncJob {
                     .setPackage(context.getPackageName());
             context.sendBroadcast(dataUpdatedIntent);
 
+        } catch (FileNotFoundException e) {
+            // Delete add failed stock info
+            Set<String> testStockPref = PrefUtils.getTestStocks(context);
+            for (String data: testStockPref) {
+                PrefUtils.removeStock(context, data);
+                PrefUtils.removeTestStock(context, data);
+            }
+
+            Intent stockNotExistIntent = new Intent(ACTION_STOCK_NOT_EXIST)
+                    .setPackage(context.getPackageName());
+            context.sendBroadcast(stockNotExistIntent);
         } catch (IOException exception) {
             Timber.e(exception, "Error fetching stock quotes");
         }
@@ -166,6 +184,5 @@ public final class QuoteSyncJob {
             scheduler.schedule(builder.build());
         }
     }
-
 
 }

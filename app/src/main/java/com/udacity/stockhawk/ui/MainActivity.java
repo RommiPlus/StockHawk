@@ -1,7 +1,9 @@
 package com.udacity.stockhawk.ui;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -29,6 +31,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
 
+import static com.udacity.stockhawk.sync.QuoteSyncJob.ACTION_STOCK_NOT_EXIST;
+
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
         SwipeRefreshLayout.OnRefreshListener,
         StockAdapter.StockAdapterOnClickHandler {
@@ -41,6 +45,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @BindView(R.id.error)
     TextView error;
     private StockAdapter adapter;
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            swipeRefreshLayout.setRefreshing(false);
+            if (intent.getAction().equals(ACTION_STOCK_NOT_EXIST)) {
+                Toast.makeText(context, getString(R.string.stock_info_not_exist), Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
 
     public static final String STOCK_NAME = "stock_name";
 
@@ -58,6 +71,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        IntentFilter intentFilter = new IntentFilter(ACTION_STOCK_NOT_EXIST);
+        registerReceiver(mReceiver, intentFilter);
 
         adapter = new StockAdapter(this, this);
         stockRecyclerView.setAdapter(adapter);
@@ -131,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
 
             PrefUtils.addStock(this, symbol);
+            PrefUtils.addTestStock(this, symbol);
             QuoteSyncJob.syncImmediately(this);
         }
     }
@@ -199,5 +216,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
     }
 }

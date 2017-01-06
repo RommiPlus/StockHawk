@@ -4,6 +4,7 @@
     <string name="pref_stocks_initialized_key">initialized</string>
 
     <string name="pref_stocks_key">stocks</string>
+    <string name="pref_test_stocks_key">test_stocks</string>
 
 
     <string name="pref_display_mode_key">displayMode</string>
@@ -33,5 +34,6 @@
     <string name="toast_no_connectivity">Will refresh when network available.</string>
     <string name="add_stock_info">add a stock info</string>
     <string name="no_data">There is no more info</string>
+    <string name="stock_info_not_exist">This stock info not exist, please try other</string>
 
 </resources>
